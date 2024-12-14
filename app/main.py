@@ -6,9 +6,10 @@ class Validator(ABC):
         self.protected_name = f"_{name}"
 
     def __get__(self, instance: object, owner: type) -> None:
-        return getattr(instance, self.protected_name)
+        return getattr(instance, self.protected_name, None)
 
     def __set__(self, instance: object, value: object) -> None:
+        self.validate(value)
         setattr(instance, self.protected_name, value)
 
     @abstractmethod
@@ -23,21 +24,22 @@ class Number(Validator):
 
     def validate(self, value: int) -> None:
         if not isinstance(value, int):
-            raise TypeError("Quantity should be integer")
+            raise TypeError("Quantity should be integer.")
         if not (self.min_value <= value <= self.max_value):
-            raise ValueError(
-                f"Quantity should not be less than "
-                f"{self.min_value} and greater than {self.max_value}"
-            )
+            raise ValueError(f"Quantity should not be less than"
+                             f" {self.min_value} and greater than"
+                             f" {self.max_value}")
 
 
 class OneOf(Validator):
-    def __init__(self, options: list) -> None:
+    def __init__(self, options: tuple) -> None:
+        if not isinstance(options, tuple):
+            raise TypeError("Quantity should be integer.")
         self.options = options
 
     def validate(self, value: str) -> None:
         if value not in self.options:
-            raise ValueError(f"Expected {value} to be one of {self.options}")
+            raise ValueError(f"Expected {value} to be one of {self.options}.")
 
 
 class BurgerRecipe:
@@ -46,7 +48,7 @@ class BurgerRecipe:
     tomatoes = Number(0, 3)
     cutlets = Number(1, 3)
     eggs = Number(0, 2)
-    sauce = OneOf(["ketchup", "mayo", "burger"])
+    sauce = OneOf(("ketchup", "mayo", "burger"))
 
     def __init__(self, buns: int,
                  cheese: int,
